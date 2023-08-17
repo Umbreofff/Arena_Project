@@ -10,17 +10,18 @@ public class Player : MonoBehaviour
     private PlayerControls playerControl;
     private CharacterController characterController;
     private Animator animator;
+    private Transform playerTransform;
     private Vector3 currentMovement;
     private Vector3 cameraRelativeMovement;
     private bool isJumping;
     private bool isMoving;
     private float currentVelocity;
+    private const float gravityScale = -9.81f;
 
-    private int isWalkingHash;
     private int isJumpingHash;
     private int velocityHash;
 
-    [SerializeField] private float jumpForce = 100;
+    [SerializeField] private float jumpHeight = 100;
     [SerializeField] private float velocity = 10;
 
     private void Awake()
@@ -28,6 +29,7 @@ public class Player : MonoBehaviour
         playerControl = new PlayerControls();
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+        playerTransform = GetComponent<Transform>();
         GetAnimatorParameters();
 
         playerControl.PlayerActions.Move.started += OnMoveInput;
@@ -43,12 +45,19 @@ public class Player : MonoBehaviour
         MovePlayer();
         AnimationHandler();
         RotationHandler();
+        GravityHandler();
+    }
+
+    private void GravityHandler()
+    {
+        currentMovement.y += gravityScale * Time.deltaTime;
     }
 
     public void OnMoveInput(InputAction.CallbackContext context)
     {
         Vector2 inputData = context.ReadValue<Vector2>();
         currentMovement.x = inputData.x;
+        currentMovement.y = 0;
         currentMovement.z = inputData.y;
         isMoving = inputData.x != 0 || inputData.y != 0;
     }
@@ -63,7 +72,7 @@ public class Player : MonoBehaviour
     {
         if (characterController.isGrounded)
         {
-            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce);
+            currentMovement.y += Mathf.Sqrt(jumpHeight * gravityScale * -1);
         }
     }
 
@@ -72,23 +81,13 @@ public class Player : MonoBehaviour
         cameraRelativeMovement = ConverToCameraSpace(currentMovement);
         characterController.Move(cameraRelativeMovement * velocity * Time.deltaTime);
         currentVelocity = characterController.velocity.magnitude / 10f;
-        print("velocity: " + currentVelocity);
     }
+
 
     private void AnimationHandler()
     {
-        bool isMovingAnimation = animator.GetBool(isWalkingHash);
         bool isJumpingAnimation = animator.GetBool(isJumpingHash);
         animator.SetFloat(velocityHash, currentVelocity);
-
-        if(isMoving && !isMovingAnimation)
-        {
-            animator.SetBool(isWalkingHash, true);
-        }
-        else if (!isMoving && isMovingAnimation)
-        {
-            animator.SetBool(isWalkingHash, false);
-        }
 
         if(isJumping && !isJumpingAnimation)
         {
@@ -121,6 +120,7 @@ public class Player : MonoBehaviour
         return vectorRotatedToCameraSpace;
     }
 
+
     private void RotationHandler()
     {
         float rotationFactorPerFrame = 10;
@@ -139,7 +139,6 @@ public class Player : MonoBehaviour
 
     private void GetAnimatorParameters()
     {
-        isWalkingHash = Animator.StringToHash("isMoving");
         isJumpingHash = Animator.StringToHash("isJumping");
         velocityHash = Animator.StringToHash("velocity");
     }
