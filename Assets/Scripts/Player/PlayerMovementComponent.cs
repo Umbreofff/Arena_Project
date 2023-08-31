@@ -18,6 +18,7 @@ public class PlayerMovementComponent : MonoBehaviour
     {
         inputData = new Vector2 (0,0);
         PlayerManager.HandleMoveInput += SetMoveInfo;
+        characterController = GetComponent<CharacterController>();
     }
 
     private void SetMoveInfo(InputAction.CallbackContext context, float velocity)
