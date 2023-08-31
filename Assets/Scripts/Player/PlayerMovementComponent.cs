@@ -9,13 +9,14 @@ using static UnityEditor.Timeline.TimelinePlaybackControls;
 public class PlayerMovementComponent : MonoBehaviour
 {
     private Vector3 currentMovement;
-    private Vector2 inputData = new Vector2(0,0);
+    private Vector2 inputData;
     private float playerVelocity;
     private bool isMoving;
     private CharacterController characterController;
 
     private void Awake()
     {
+        inputData = new Vector2 (0,0);
         PlayerManager.HandleMoveInput += SetMoveInfo;
     }
 
@@ -67,7 +68,7 @@ public class PlayerMovementComponent : MonoBehaviour
 
     private void OnDisable()
     {
-        PlayerManager.HandleMoveInput += SetMoveInfo;
+        PlayerManager.HandleMoveInput -= SetMoveInfo;
     }
 
 }
