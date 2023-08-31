@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,32 +9,33 @@ using static UnityEditor.Timeline.TimelinePlaybackControls;
 public class PlayerMovementComponent : MonoBehaviour
 {
     private Vector3 currentMovement;
+    private Vector2 inputData = new Vector2(0,0);
     private float playerVelocity;
-    private CharacterController characterController;
-
     private bool isMoving;
+    private CharacterController characterController;
 
     private void Awake()
     {
-        characterController = GetComponent<CharacterController>();
-        playerVelocity = PlayerManager.instance.GetPlayerVelocity();
+        PlayerManager.HandleMoveInput += SetMoveInfo;
     }
 
-    public void MovePlayer(InputAction.CallbackContext context)
+    private void SetMoveInfo(InputAction.CallbackContext context, float velocity)
     {
-        Vector2 inputData = context.ReadValue<Vector2>();
+        playerVelocity = velocity;
+        inputData = context.ReadValue<Vector2>();
+    }
+    private void Update()
+    {
         MoveHandler(inputData);
     }
 
-    private void MoveHandler(Vector2 inputData)
+    public void MoveHandler(Vector2 inputData)
     {
         currentMovement.x = inputData.x;
         currentMovement.y = 0;
         currentMovement.z = inputData.y;
 
-        bool isMoving = inputData.x != 0 || inputData.y != 0; 
-        PlayerManager.instance.SetIsMoving(isMoving);
-
+        isMoving = inputData.x != 0 || inputData.y != 0;
         //currentVelocity = characterController.velocity.magnitude;
         characterController.Move(currentMovement * playerVelocity * Time.deltaTime);
         RotationHandler();
@@ -48,7 +50,7 @@ public class PlayerMovementComponent : MonoBehaviour
         positionToLookAt.z = currentMovement.z;
         Quaternion currentRotation = transform.rotation;
 
-        if (PlayerManager.instance.GetIsMoving())
+        if (isMoving)
         {
             Quaternion targetRotation = Quaternion.LookRotation(positionToLookAt);
             transform.rotation = Quaternion.Slerp(currentRotation, targetRotation, rotationFactorPerFrame * Time.deltaTime);
@@ -62,4 +64,11 @@ public class PlayerMovementComponent : MonoBehaviour
             //currentMovement.y += Mathf.Sqrt(jumpHeight * gravityScale * -1);
         }
     }
+
+    private void OnDisable()
+    {
+        PlayerManager.HandleMoveInput += SetMoveInfo;
+    }
+
 }
+

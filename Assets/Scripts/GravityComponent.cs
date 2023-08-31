@@ -18,6 +18,7 @@ public class GravityComponent : MonoBehaviour
 
     private void GravityHandler()
     {
-        currentMovement.y += gravityScale * Time.deltaTime;
+        gravityVelocity.y += gravity * gravityScale * Time.deltaTime;
+        //characterController.Move(gravityVelocity);
     }
 }
